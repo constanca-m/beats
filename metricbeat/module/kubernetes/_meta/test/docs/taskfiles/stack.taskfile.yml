@@ -1,0 +1,19 @@
+version: '3'
+
+tasks:
+  up:
+    internal: true
+    preconditions:
+      - test $(docker ps -a | grep elastic-package | grep healthy | wc -l) -lt 5
+    cmds:
+      - elastic-package stack up -d -vvv --version={{.ELASTIC_STACK_VERSION}}
+
+  down:
+    internal: true
+    cmds:
+      - elastic-package stack down
+
+  connect_to_stack:
+    internal: true
+    cmds:
+      - docker network connect elastic-package-stack_default {{.NODE_NAME}}

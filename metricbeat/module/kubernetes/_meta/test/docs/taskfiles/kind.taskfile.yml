@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  create_cluster:
+    internal: true
+    cmds:
+      - kind create cluster --name {{.CLUSTER_NAME}}
+
+  delete_cluster:
+    internal: true
+    cmds:
+      - kind delete cluster --name {{.CLUSTER_NAME}}

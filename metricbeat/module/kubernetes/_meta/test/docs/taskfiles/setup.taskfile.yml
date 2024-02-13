@@ -1,0 +1,27 @@
+version: '3'
+
+includes:
+  kind: kind.taskfile.yml
+  stack: stack.taskfile.yml
+
+tasks:
+  create:
+    desc: "Create local environment."
+    cmds:
+      - task: stack:up
+      - task: kind:create_cluster
+      - task: stack:connect_to_stack
+      - task: deploy_KSM
+
+  delete:
+    desc: "Delete local environment."
+    cmds:
+      - task: stack:down
+      - task: kind:delete_cluster
+
+  deploy_KSM:
+    internal: true
+    preconditions:
+      - test "{{.BEATS}}" = "metricbeat"
+    cmds:
+      - kubectl apply -k https://github.com/kubernetes/kube-state-metrics

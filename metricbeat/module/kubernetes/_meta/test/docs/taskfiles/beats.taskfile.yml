@@ -1,0 +1,44 @@
+version: '3'
+
+tasks:
+  deploy_beats:
+    desc: "Deploy {{.BEATS}}."
+    preconditions:
+      - test $(kubectl get pod -n kube-system -l k8s-app={{.BEATS}} | wc -l) -eq 0
+    cmds:
+      - task: build_beats
+      - kubectl apply -f {{.BEATS}}.yaml
+      - task: wait_for_resource
+      - kubectl wait --for=condition=Ready pod -l k8s-app={{.BEATS}} -n kube-system --timeout 60s
+      - task: copy_and_exec_beats
+
+  wait_for_resource:
+    internal: true
+    silent: true
+    cmds:
+      - |
+        x=$(kubectl get pod -n kube-system -l k8s-app={{.BEATS}} | wc -l)
+        while [ $x -eq 0 ]
+        do
+          x=$(kubectl get pod -n kube-system -l k8s-app={{.BEATS}} | wc -l)
+        done
+
+  build_beats:
+    internal: true
+    dir: '{{.BEATS_DIR}}'
+    cmds:
+      - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build
+
+  copy_and_exec_beats:
+    internal: true
+    dir: '{{.BEATS_DIR}}'
+    preconditions:
+      - test $(kubectl get pod -n kube-system -l k8s-app={{.BEATS}} | grep READY | wc -l) -eq 1
+    cmds:
+      - kubectl cp ./{{.BEATS}} `kubectl get pod -n kube-system -l k8s-app={{.BEATS}} -o jsonpath='{.items[].metadata.name}'`:/usr/share/{{.BEATS}}/ -n kube-system
+      - kubectl exec `kubectl get pod -n kube-system -l k8s-app={{.BEATS}} -o jsonpath='{.items[].metadata.name}'` -n kube-system -- bash -c "{{.BEATS}} -e -c /etc/{{.BEATS}}.yml"
+
+  delete_beats:
+    desc: "Delete {{.BEATS}} from the cluster."
+    cmds:
+      - kubectl delete -f {{.BEATS}}.yaml

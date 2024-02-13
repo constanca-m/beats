@@ -38,9 +38,10 @@ data:
     cloud.auth: ${ELASTIC_CLOUD_AUTH}
 
     output.elasticsearch:
-      hosts: ['${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}']
+      hosts: ['https://${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}']
       username: ${ELASTICSEARCH_USERNAME}
       password: ${ELASTICSEARCH_PASSWORD}
+      ssl.verification_mode: "none"
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -69,7 +70,7 @@ spec:
         args: [ "infinity" ]
         env:
         - name: ELASTICSEARCH_HOST
-          value: elasticsearch.default.svc.cluster.local
+          value: elasticsearch
         - name: ELASTICSEARCH_PORT
           value: "9200"
         - name: ELASTICSEARCH_USERNAME

@@ -1,0 +1,7 @@
+version: '3'
+
+dotenv: ['.env', '{{.ENV}}/.env.', '{{.HOME}}/.env']
+
+includes:
+  beats: ../../../../metricbeat/module/kubernetes/_meta/test/docs/taskfiles/beats.taskfile.yml
+  setup: ../../../../metricbeat/module/kubernetes/_meta/test/docs/taskfiles/setup.taskfile.yml
